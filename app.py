@@ -1,8 +1,8 @@
 import customtkinter
+import os
 
-customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
-customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
-
+customtkinter.set_appearance_mode("System")
+customtkinter.set_default_color_theme("blue")
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -48,15 +48,13 @@ class App(customtkinter.CTk):
         # Appearance Mode Label and OptionMenu
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
         self.appearance_mode_label.grid(row=7, column=0, padx=20, pady=(10, 0))
-        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"],
-                                                                       command=self.change_appearance_mode_event)
+        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"], command=self.change_appearance_mode_event)
         self.appearance_mode_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 10))
         
         # UI Scaling Label and OptionMenu
         self.scaling_label = customtkinter.CTkLabel(self.sidebar_frame, text="UI Scaling:", anchor="w")
         self.scaling_label.grid(row=9, column=0, padx=20, pady=(10, 0))
-        self.scaling_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["80%", "90%", "100%", "110%", "120%"],
-                                                               command=self.change_scaling_event)
+        self.scaling_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["80%", "90%", "100%", "110%", "120%"], command=self.change_scaling_event)
         self.scaling_optionemenu.grid(row=10, column=0, padx=20, pady=(10, 20))
 
         # create buttons in the middle
@@ -66,9 +64,9 @@ class App(customtkinter.CTk):
         self.appearance_mode_optionemenu.set("Dark")
         self.scaling_optionemenu.set("100%")
 
-    def open_input_dialog_event(self):
-        dialog = customtkinter.CTkInputDialog(text="Type in a number:", title="CTkInputDialog")
-        print("CTkInputDialog:", dialog.get_input())
+        # folder opening button
+        self.open_folder_button = customtkinter.CTkButton(self, text="Otwórz Folder", command=self.open_folder)
+        self.open_folder_button.grid(row=1, column=2, padx=20, pady=20)
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
@@ -83,6 +81,9 @@ class App(customtkinter.CTk):
         else:
             print("sidebar_button click")
 
+    def open_folder(self):
+        folder_path = "C:/Users/Tymek/software-engineering-project/Database"
+        os.startfile(folder_path)
 
 if __name__ == "__main__":
     app = App()
