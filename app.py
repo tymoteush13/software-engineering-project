@@ -1,5 +1,9 @@
 import customtkinter
 import os
+from integrate_with_calendar import create_google_calendar_event
+
+from datetime import datetime
+import pytz
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
@@ -68,6 +72,11 @@ class App(customtkinter.CTk):
         self.open_folder_button = customtkinter.CTkButton(self, text="Otwórz Folder", command=self.open_folder)
         self.open_folder_button.grid(row=1, column=2, padx=20, pady=20)
 
+        # create event window button
+        self.create_event_window_button = customtkinter.CTkButton(self, text="Utwórz wydarzenie", command=self.open_event_window)
+        self.create_event_window_button.grid(row=2, column=2, padx=20, pady=20)
+
+
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
 
@@ -84,6 +93,73 @@ class App(customtkinter.CTk):
     def open_folder(self):
         folder_path = "C:/Users/Tymek/software-engineering-project/Database"
         os.startfile(folder_path)
+
+    def open_event_window(self):
+        # Create a new top-level window
+        self.event_window = customtkinter.CTkToplevel(self)
+        self.event_window.title("Nowe wydarzenie")
+        self.event_window.geometry(f"{500}x400")
+        self.event_window.resizable(False, False)
+
+        # Calendar event input fields
+        self.event_title_label = customtkinter.CTkLabel(self.event_window, text="Tytuł wydarzenia:", anchor="w")
+        self.event_title_label.grid(row=0, column=0, padx=20, pady=(20, 5))
+        self.event_title_entry = customtkinter.CTkEntry(self.event_window, width=300)
+        self.event_title_entry.grid(row=0, column=1, padx=20, pady=(20, 5))
+
+        self.event_description_label = customtkinter.CTkLabel(self.event_window, text="Opis wydarzenia:", anchor="w")
+        self.event_description_label.grid(row=1, column=0, padx=20, pady=5)
+        self.event_description_entry = customtkinter.CTkEntry(self.event_window, width=300)
+        self.event_description_entry.grid(row=1, column=1, padx=20, pady=5)
+
+        self.event_location_label = customtkinter.CTkLabel(self.event_window, text="Lokalizacja:", anchor="w")
+        self.event_location_label.grid(row=2, column=0, padx=20, pady=5)
+        self.event_location_entry = customtkinter.CTkEntry(self.event_window, width=300)
+        self.event_location_entry.grid(row=2, column=1, padx=20, pady=5)
+
+        self.start_time_label = customtkinter.CTkLabel(self.event_window, text="Data i czas rozpoczęcia (YYYY-MM-DD HH:MM):", anchor="w")
+        self.start_time_label.grid(row=3, column=0, padx=20, pady=5)
+        self.start_time_entry = customtkinter.CTkEntry(self.event_window, width=300)
+        self.start_time_entry.grid(row=3, column=1, padx=20, pady=5)
+
+        self.end_time_label = customtkinter.CTkLabel(self.event_window, text="Data i czas zakończenia (YYYY-MM-DD HH:MM):", anchor="w")
+        self.end_time_label.grid(row=4, column=0, padx=20, pady=5)
+        self.end_time_entry = customtkinter.CTkEntry(self.event_window, width=300)
+        self.end_time_entry.grid(row=4, column=1, padx=20, pady=5)
+
+        # Button to create event
+        self.create_event_button = customtkinter.CTkButton(self.event_window, text="Utwórz wydarzenie", command=self.create_event)
+        self.create_event_button.grid(row=5, column=0, columnspan=2, padx=20, pady=20)
+
+    def create_event(self):
+        title = self.event_title_entry.get()
+        description = self.event_description_entry.get()
+        location = self.event_location_entry.get()
+        start_time_str = self.start_time_entry.get()
+        end_time_str = self.end_time_entry.get()
+
+
+        try:
+            
+            start_time = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M")
+            end_time = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M")
+        except ValueError:
+            print("Błędny format daty lub godziny. Użyj formatu: YYYY-MM-DD HH:MM")
+            return
+        
+        event_data = {
+            "summary": title,
+            "description": description,
+            "location": location,
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat()
+        }
+
+        event_link = create_google_calendar_event(event_data)
+        if event_link:
+            print(f"Wydarzenie zostało utworzone: {event_link}")
+        else:
+            print("Nie udało się utworzyć wydarzenia.")
 
 if __name__ == "__main__":
     app = App()

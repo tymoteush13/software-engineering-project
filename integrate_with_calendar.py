@@ -1,5 +1,5 @@
 import os.path
-import datetime as dt
+from datetime import datetime
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -10,7 +10,7 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 
-def main():
+def get_google_calendar_service():
     creds = None
 
     if os.path.exists("token.json"):
@@ -22,12 +22,31 @@ def main():
         else:
             flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
             creds = flow.run_local_server(port=0)
-
         with open("token.json", "w") as token:
             token.write(creds.to_json())
+    return build("calendar", "v3", credentials=creds)
 
+def create_google_calendar_event(event_data):
     try:
-        service = build("calendar", "v3", credentials=creds)
+        service = get_google_calendar_service()
+
+        start_time = datetime.fromisoformat(event_data["start_time"])
+        end_time = datetime.fromisoformat(event_data["end_time"])
+
+        event = {
+            "summary": event_data["summary"],
+            "location": event_data["location"],
+            "description": event_data["description"],
+            "start": {"dateTime": start_time.isoformat(), "timeZone": "Europe/Warsaw"},
+            "end": {"dateTime": end_time.isoformat(), "timeZone": "Europe/Warsaw"},
+        }
+
+        event_result = service.events().insert(calendarId="primary", body=event).execute()
+        return event_result.get("htmlLink")  # Link do wydarzenia
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        return None
+
 
 
 
@@ -49,26 +68,3 @@ def main():
             start = event["start"].get("dateTime", event["start"].get("date"))
             print(start, event["summary"])
         '''
-
-        # Create an event
-        event = {
-            "summary": "Test Event",
-            "location": "Test Location",
-            "description": "Test Description",
-            "colorId": 6,
-            "start": {"dateTime": "2025-01-10T09:00:00", "timeZone": "Europe/Warsaw"},
-            "end": {"dateTime": "2025-01-10T17:00:00", "timeZone": "Europe/Warsaw"},
-
-        }
-
-
-        event = service.events().insert(calendarId="primary", body=event).execute()
-        print(f"Event created: {event.get('htmlLink')}")
-
-
-
-    except HttpError as error:
-        print(f"An error occurred: {error}")
-
-
-main()
