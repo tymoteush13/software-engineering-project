@@ -26,7 +26,7 @@ def get_google_calendar_service():
             token.write(creds.to_json())
     return build("calendar", "v3", credentials=creds)
 
-def create_google_calendar_event(event_data):
+def create_google_calendar_event(event_data, calendar_id="primary"):
     try:
         service = get_google_calendar_service()
 
@@ -41,15 +41,36 @@ def create_google_calendar_event(event_data):
             "end": {"dateTime": end_time.isoformat(), "timeZone": "Europe/Warsaw"},
         }
 
-        event_result = service.events().insert(calendarId="primary", body=event).execute()
-        return event_result.get("htmlLink")  # Link do wydarzenia
+        event_result = service.events().insert(calendarId=calendar_id, body=event).execute()
+        return event_result.get("htmlLink")
     except HttpError as error:
         print(f"An error occurred: {error}")
         return None
 
+def list_google_calendar_events(calendar_id='primary'):
+    try:
+        service = get_google_calendar_service()
 
+        now = datetime.utcnow().isoformat() + "Z"
+        events_result = service.events().list(
+            calendarId=calendar_id,
+            timeMin=now,
+            singleEvents=True,
+            orderBy='startTime'
+        ).execute()
+        return events_result.get('items', [])
+    except Exception as e:
+        print(f"Błąd przy pobieraniu wydarzeń: {e}")
+        return []
 
-
+def delete_google_calendar_event(event_id, calendar_id='primary'):
+    try:
+        service = get_google_calendar_service()
+        service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+        return True
+    except Exception as e:
+        print(f"Błąd przy usuwaniu wydarzenia: {e}")
+        return False
 
         # List the next 10 events from now
         '''
