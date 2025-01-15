@@ -170,15 +170,6 @@ class App(customtkinter.CTk):
         self.event_window.geometry(f"{700}x{300}")
         self.event_window.resizable(False, False)
 
-        self.email_label = customtkinter.CTkLabel(self, text="Adres e-mail:", anchor="w")
-        self.email_label.grid(row=0, column=0, padx=20, pady=(20, 5))
-        
-        self.email_entry = customtkinter.CTkEntry(self, width=300)
-        self.email_entry.grid(row=0, column=1, padx=20, pady=5)
-        
-        self.save_email_button = customtkinter.CTkButton(self, text="Zapisz e-mail", command=self.save_email)
-        self.save_email_button.grid(row=0, column=2, padx=20, pady=5)
-
         # Calendar event input fields
         self.event_title_label = customtkinter.CTkLabel(self.event_window, text="Tytuł wydarzenia:", anchor="w")
         self.event_title_label.grid(row=0, column=0, padx=20, pady=(20, 5))
@@ -220,7 +211,7 @@ class App(customtkinter.CTk):
         location = self.event_location_entry.get()
         start_time_str = self.start_time_entry.get()
         end_time_str = self.end_time_entry.get()
-        calendar_email = self.event_email_entry.    get()
+        calendar_email = self.event_email_entry.get()
 
         try:
             start_time = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M")
