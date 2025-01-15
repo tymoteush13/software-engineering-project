@@ -66,17 +66,23 @@ class App(customtkinter.CTk):
         self.appearance_mode_optionemenu.set("Dark")
         self.scaling_optionemenu.set("100%")
 
+        self.email_label = customtkinter.CTkLabel(self, text="Adres e-mail kalendarza:", anchor="w")
+        self.email_label.grid(row=0, column=2, padx=(5, 0), pady=(5, 0))
+
+        self.email_entry = customtkinter.CTkEntry(self, width=300)
+        self.email_entry.grid(row=0, column=3, padx=(0, 5), pady=(5, 0))
+
         # folder opening button
         self.open_folder_button = customtkinter.CTkButton(self, text="Otwórz Folder", command=self.open_folder)
-        self.open_folder_button.grid(row=0, column=2, padx=20, pady=20)
+        self.open_folder_button.grid(row=1, column=3, padx=10, pady=10)
 
         # create event window button
         self.create_event_window_button = customtkinter.CTkButton(self, text="Utwórz wydarzenie", command=self.open_event_window)
-        self.create_event_window_button.grid(row=1, column=2, padx=20, pady=20)
+        self.create_event_window_button.grid(row=2, column=3, padx=10, pady=10)
 
         # list events button
         self.list_events_button = customtkinter.CTkButton(self, text="Wyświetl i usuń wydarzenia", command=self.list_and_delete_events)
-        self.list_events_button.grid(row=2, column=2, padx=20, pady=20)
+        self.list_events_button.grid(row=3, column=3, padx=10, pady=10)
 
 
 
@@ -98,8 +104,15 @@ class App(customtkinter.CTk):
         os.startfile(folder_path)
 
     def list_and_delete_events(self):
+
+        user_email = self.email_entry.get().strip()
+
+        if not user_email:
+            print("Proszę podać adres e-mail.")
+            return
+
         # Pobierz wydarzenia z kalendarza
-        events = list_google_calendar_events()
+        events = list_google_calendar_events(user_email)
 
         if not events:
             print("Brak wydarzeń do wyświetlenia.")
@@ -196,11 +209,6 @@ class App(customtkinter.CTk):
         self.end_time_entry = customtkinter.CTkEntry(self.event_window, width=300)
         self.end_time_entry.grid(row=4, column=1, padx=20, pady=5)
 
-        self.event_email_label = customtkinter.CTkLabel(self.event_window, text="Adres e-mail:", anchor="w")
-        self.event_email_label.grid(row=5, column=0, padx=20, pady=5)
-        self.event_email_entry = customtkinter.CTkEntry(self.event_window, width=300)
-        self.event_email_entry.grid(row=5, column=1, padx=20, pady=5)
-
         # Button to create event
         self.create_event_button = customtkinter.CTkButton(self.event_window, text="Utwórz wydarzenie", command=self.create_event)
         self.create_event_button.grid(row=6, column=0, columnspan=2, padx=20, pady=20)
@@ -211,7 +219,7 @@ class App(customtkinter.CTk):
         location = self.event_location_entry.get()
         start_time_str = self.start_time_entry.get()
         end_time_str = self.end_time_entry.get()
-        calendar_email = self.event_email_entry.get()
+        calendar_email = self.email_entry.get().strip()
 
         try:
             start_time = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M")
@@ -228,7 +236,8 @@ class App(customtkinter.CTk):
             "end_time": end_time.isoformat(),
         }
 
-        event_link = create_google_calendar_event(event_data, calendar_id=calendar_email)
+        user_email = calendar_email
+        event_link = create_google_calendar_event(event_data,user_email ,calendar_id=calendar_email)
         if event_link:
             print(f"Wydarzenie zostało utworzone: {event_link}")
             self.event_window.destroy()

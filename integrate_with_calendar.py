@@ -10,25 +10,41 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 
-def get_google_calendar_service():
+def get_google_calendar_service(user_email):
+    if not user_email:
+        print("Adres e-mail nie został podany.")
+        return None
+
     creds = None
+    token_file = f"token_{user_email}.json"
 
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json")
+    # Sprawdź, czy token istnieje
+    if os.path.exists(token_file):
+        creds = Credentials.from_authorized_user_file(token_file)
 
+    # Odśwież token lub uzyskaj nowy
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
             creds = flow.run_local_server(port=0)
-        with open("token.json", "w") as token:
+        # Zapisz token dla danego użytkownika
+        with open(token_file, "w") as token:
             token.write(creds.to_json())
-    return build("calendar", "v3", credentials=creds)
+    if creds:
+        return build("calendar", "v3", credentials=creds)
+    else:
+        print(f"Nie można utworzyć usługi Google Calendar dla użytkownika {user_email}.")
+        return None
 
-def create_google_calendar_event(event_data, calendar_id="primary"):
+def create_google_calendar_event(event_data,user_email ,calendar_id="primary"):
     try:
-        service = get_google_calendar_service()
+        service = get_google_calendar_service(user_email)
+
+        if not service:
+            print("Nie udało się uzyskać dostępu do usługi Google Calendar.")
+            return None
 
         start_time = datetime.fromisoformat(event_data["start_time"])
         end_time = datetime.fromisoformat(event_data["end_time"])
@@ -47,9 +63,9 @@ def create_google_calendar_event(event_data, calendar_id="primary"):
         print(f"An error occurred: {error}")
         return None
 
-def list_google_calendar_events(calendar_id='primary'):
+def list_google_calendar_events(user_email, calendar_id='primary'):
     try:
-        service = get_google_calendar_service()
+        service = get_google_calendar_service(user_email)
 
         now = datetime.utcnow().isoformat() + "Z"
         events_result = service.events().list(
@@ -63,9 +79,9 @@ def list_google_calendar_events(calendar_id='primary'):
         print(f"Błąd przy pobieraniu wydarzeń: {e}")
         return []
 
-def delete_google_calendar_event(event_id, calendar_id='primary'):
+def delete_google_calendar_event(event_id,user_email ,calendar_id='primary'):
     try:
-        service = get_google_calendar_service()
+        service = get_google_calendar_service(user_email)
         service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
         return True
     except Exception as e:
