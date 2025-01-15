@@ -9,7 +9,7 @@ from googleapiclient.errors import HttpError
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
-
+# Function to get the Google Calendar service
 def get_google_calendar_service(user_email):
     if not user_email:
         print("Adres e-mail nie został podany.")
@@ -18,18 +18,16 @@ def get_google_calendar_service(user_email):
     creds = None
     token_file = f"token_{user_email}.json"
 
-    # Sprawdź, czy token istnieje
     if os.path.exists(token_file):
         creds = Credentials.from_authorized_user_file(token_file)
 
-    # Odśwież token lub uzyskaj nowy
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
             creds = flow.run_local_server(port=0)
-        # Zapisz token dla danego użytkownika
         with open(token_file, "w") as token:
             token.write(creds.to_json())
     if creds:
