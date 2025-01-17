@@ -68,6 +68,9 @@ class App(customtkinter.CTk):
         self.appearance_mode_optionemenu.set("Dark")
         self.scaling_optionemenu.set("100%")
 
+        self.start_button = customtkinter.CTkButton(self, text="Start", command=self.toggle_start_stop, fg_color="green", hover_color="darkgreen")
+        self.start_button.grid(row=0, column=1, padx=10, pady=10)
+
         self.email_label = customtkinter.CTkLabel(self, text="Adres e-mail kalendarza:", anchor="w")
         self.email_label.grid(row=0, column=2, padx=(5, 0), pady=(5, 0))
 
@@ -87,6 +90,11 @@ class App(customtkinter.CTk):
         self.list_events_button.grid(row=3, column=3, padx=10, pady=10)
 
 
+    def toggle_start_stop(self):
+        if self.start_button.cget("text") == "Start":
+            self.start_button.configure(text="Stop", fg_color="red", hover_color="darkred")
+        else:
+            self.start_button.configure(text="Start", fg_color="green", hover_color="darkgreen")
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
