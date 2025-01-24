@@ -158,7 +158,11 @@ class App(customtkinter.CTk):
             self.events_textbox.insert("end", f"{idx}. {event['summary']} (Start: {start_time})\n")
             self.event_id_mapping[str(idx)] = event['id']
 
+        
+
         self.events_textbox.configure(state="disabled")
+
+
 
         # Delete event input fields
         self.event_number_label = customtkinter.CTkLabel(self.events_window, text="Numer wydarzenia do usunięcia:", anchor="w")
@@ -255,8 +259,44 @@ class App(customtkinter.CTk):
 
         user_email = calendar_email
         event_link = create_google_calendar_event(event_data,user_email ,calendar_id=calendar_email)
+
         if event_link:
             print(f"Wydarzenie zostało utworzone: {event_link}")
+        
+            # Pobierz najbliższe wydarzenie z kalendarza
+            events = list_google_calendar_events(user_email)
+            if events:
+                # Znajdź najbliższe wydarzenie (sprawdzając godzinę rozpoczęcia)
+                next_event = None
+                for event in events:
+                    event_start_time = event['start'].get('dateTime', event['start'].get('date'))
+                    event_start_time = datetime.fromisoformat(event_start_time)
+
+                    event_start_time = event_start_time.replace(tzinfo=None)
+
+                    if event_start_time > datetime.now():
+                        next_event = event
+                        break
+
+                if next_event:
+                    event_start_time = next_event['start'].get('dateTime', next_event['start'].get('date'))
+                    event_start_time = datetime.fromisoformat(event_start_time)
+
+                    event_start_time = event_start_time.replace(tzinfo=None)
+
+                    # Oblicz czas do rozpoczęcia wydarzenia
+                    time_diff = event_start_time - datetime.now()
+                    if time_diff.total_seconds() > 0:
+                        # Ustaw timer na rozpoczęcie nagrywania
+                        print(f"Ustawiam timer na rozpoczęcie nagrywania o {event_start_time}")
+                        self.after(int(time_diff.total_seconds() * 1000), self.toggle_start_stop)
+                    else:
+                        print("Wydarzenie już się rozpoczęło!")
+                else:
+                    print("Brak nadchodzących wydarzeń.")
+            else:
+                print("Nie znaleziono wydarzeń w kalendarzu.")
+
             self.event_window.destroy()
         else:
             print("Nie udało się utworzyć wydarzenia.")
