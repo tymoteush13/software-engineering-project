@@ -114,7 +114,12 @@ class App(customtkinter.CTk):
             print("sidebar_button click")
 
     def open_folder(self):
-        folder_path = "C:/Users/Tymek/software-engineering-project/Database"
+        folder_path = os.path.join(os.environ["USERPROFILE"], "software-engineering-project","Database")
+        
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+            print(f"Folder created at: {folder_path}")
+        
         os.startfile(folder_path)
 
     def list_and_delete_events(self):

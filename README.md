@@ -5,4 +5,5 @@ pip install mss --> biblioteka, która umożliwia przechwytywanie ekranu
 pip install pytesseract --> wykonywanie OCR (ma trudności z poprawnym rozpoznaniem tekstu pisanego przez kogoś)
 pip install customtkinter --> GUI w Pythonie
 pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib --> polaczenie z kalendarzem google
-pip install pytz --> konwersja dat do kalendarza
+pip install python-docx --> tworzy dokument Word
+pip install comtypes --> kowersja na pdf
