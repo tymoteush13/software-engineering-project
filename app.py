@@ -2,8 +2,7 @@ import customtkinter
 import os
 from integrate_with_calendar import create_google_calendar_event, list_google_calendar_events, delete_google_calendar_event
 from record_audio import start_recording, stop_recording_threads
-
-from datetime import datetime
+from datetime import datetime, timezone
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
@@ -19,7 +18,6 @@ class App(customtkinter.CTk):
         self.event_window = None
         
         self.records_thread = None
-
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure((2, 3), weight=0)
@@ -80,6 +78,10 @@ class App(customtkinter.CTk):
         self.email_entry = customtkinter.CTkEntry(self, width=300)
         self.email_entry.grid(row=0, column=3, padx=(0, 5), pady=(5, 0))
 
+        # schedule recording button
+        self.schedule_recording_button = customtkinter.CTkButton(self, text="Zaplanowanie nagrywania", command=self.open_schedule_recording_window)
+        self.schedule_recording_button.grid(row=1, column=2, padx=10, pady=10)
+
         # folder opening button
         self.open_folder_button = customtkinter.CTkButton(self, text="Otwórz Folder", command=self.open_folder)
         self.open_folder_button.grid(row=1, column=3, padx=10, pady=10)
@@ -129,12 +131,18 @@ class App(customtkinter.CTk):
         if not user_email:
             print("Proszę podać adres e-mail.")
             return
+        
+        if not user_email.endswith("@gmail.com"):
+            print("Nieprawidłowy adres e-mail.")
+            return
 
         events = list_google_calendar_events(user_email)
 
         if not events:
             print("Brak wydarzeń do wyświetlenia.")
             return
+        
+        self.email_entry.configure(state="disabled")
 
         # Events window
         self.events_window = customtkinter.CTkToplevel(self)
@@ -142,6 +150,12 @@ class App(customtkinter.CTk):
         self.events_window.geometry(f"{600}x{500}")
         self.events_window.resizable(False, False)
         self.events_window.attributes("-topmost", True)
+
+        def on_close_event_window():
+            self.email_entry.configure(state="normal")
+            self.events_window.destroy()
+
+        self.events_window.protocol("WM_DELETE_WINDOW", on_close_event_window)
 
         # Event list
         self.events_list_label = customtkinter.CTkLabel(self.events_window, text="Wydarzenia:", anchor="w")
@@ -158,11 +172,7 @@ class App(customtkinter.CTk):
             self.events_textbox.insert("end", f"{idx}. {event['summary']} (Start: {start_time})\n")
             self.event_id_mapping[str(idx)] = event['id']
 
-        
-
         self.events_textbox.configure(state="disabled")
-
-
 
         # Delete event input fields
         self.event_number_label = customtkinter.CTkLabel(self.events_window, text="Numer wydarzenia do usunięcia:", anchor="w")
@@ -189,6 +199,13 @@ class App(customtkinter.CTk):
         event_id = self.event_id_mapping[event_number]
         user_email = self.email_entry.get().strip()
 
+        if not user_email:
+            print("Proszę podać adres e-mail.")
+            return
+        if not user_email.endswith("@gmail.com"):
+            print("Nieprawidłowy adres e-mail.")
+            return
+
         success = delete_google_calendar_event(event_id, user_email)
         if success:
             print(f"Wydarzenie zostało usunięte.")
@@ -197,12 +214,29 @@ class App(customtkinter.CTk):
             print(f"Nie udało się usunąć wydarzenia.")
 
     def open_event_window(self):
+
+        if not self.email_entry.get().strip():
+            print("Proszę podać adres e-mail.")
+            return
+        if not self.email_entry.get().strip().endswith("@gmail.com"):
+            print("Nieprawidłowy adres e-mail.")
+            return
+
+        self.email_entry.configure(state="disabled")
+
+
         # Create a new top-level window
         self.event_window = customtkinter.CTkToplevel(self)
         self.event_window.title("Nowe wydarzenie")
         self.event_window.geometry(f"{700}x{300}")
         self.event_window.resizable(False, False)
         self.event_window.attributes("-topmost", True)
+
+        def on_close_event_window():
+            self.email_entry.configure(state="normal")
+            self.event_window.destroy()
+
+        self.event_window.protocol("WM_DELETE_WINDOW", on_close_event_window)
 
         # Calendar event input fields
         self.event_title_label = customtkinter.CTkLabel(self.event_window, text="Tytuł wydarzenia:", anchor="w")
@@ -262,44 +296,103 @@ class App(customtkinter.CTk):
 
         if event_link:
             print(f"Wydarzenie zostało utworzone: {event_link}")
-        
-            # Pobierz najbliższe wydarzenie z kalendarza
-            events = list_google_calendar_events(user_email)
-            if events:
-                # Znajdź najbliższe wydarzenie (sprawdzając godzinę rozpoczęcia)
-                next_event = None
-                for event in events:
-                    event_start_time = event['start'].get('dateTime', event['start'].get('date'))
-                    event_start_time = datetime.fromisoformat(event_start_time)
-
-                    event_start_time = event_start_time.replace(tzinfo=None)
-
-                    if event_start_time > datetime.now():
-                        next_event = event
-                        break
-
-                if next_event:
-                    event_start_time = next_event['start'].get('dateTime', next_event['start'].get('date'))
-                    event_start_time = datetime.fromisoformat(event_start_time)
-
-                    event_start_time = event_start_time.replace(tzinfo=None)
-
-                    # Oblicz czas do rozpoczęcia wydarzenia
-                    time_diff = event_start_time - datetime.now()
-                    if time_diff.total_seconds() > 0:
-                        # Ustaw timer na rozpoczęcie nagrywania
-                        print(f"Ustawiam timer na rozpoczęcie nagrywania o {event_start_time}")
-                        self.after(int(time_diff.total_seconds() * 1000), self.toggle_start_stop)
-                    else:
-                        print("Wydarzenie już się rozpoczęło!")
-                else:
-                    print("Brak nadchodzących wydarzeń.")
-            else:
-                print("Nie znaleziono wydarzeń w kalendarzu.")
-
+            self.email_entry.configure(state="normal")
             self.event_window.destroy()
         else:
             print("Nie udało się utworzyć wydarzenia.")
+
+    def open_schedule_recording_window(self):
+        user_email = self.email_entry.get().strip()
+
+        if not user_email:
+            print("Proszę podać adres e-mail.")
+            return
+        
+        if not user_email.endswith("@gmail.com"):
+            print("Nieprawidłowy adres e-mail.")
+            return
+
+        events = list_google_calendar_events(user_email)
+
+        if not events:
+            print("Brak wydarzeń do wyświetlenia.")
+            return
+
+        self.email_entry.configure(state="disabled")
+
+        # Schedule recording window
+        self.schedule_window = customtkinter.CTkToplevel(self)
+        self.schedule_window.title("Zaplanowanie nagrywania")
+        self.schedule_window.geometry(f"{600}x{500}")
+        self.schedule_window.resizable(False, False)
+        self.schedule_window.attributes("-topmost", True)
+
+        def on_close_schedule_window():
+            self.email_entry.configure(state="normal")
+            self.schedule_window.destroy()
+
+        self.schedule_window.protocol("WM_DELETE_WINDOW", on_close_schedule_window)
+
+        self.schedule_list_label = customtkinter.CTkLabel(self.schedule_window, text="Wydarzenia:", anchor="w")
+        self.schedule_list_label.grid(row=0, column=0, padx=20, pady=(20, 5))
+
+        self.schedule_textbox = customtkinter.CTkTextbox(self.schedule_window, width=500, height=300)
+        self.schedule_textbox.grid(row=1, column=0, columnspan=2, padx=20, pady=5)
+
+        self.schedule_event_mapping = {}
+
+        for idx, event in enumerate(events, start=1):
+            start_time = event['start'].get('dateTime', event['start'].get('date'))
+            self.schedule_textbox.insert("end", f"{idx}. {event['summary']} (Start: {start_time})\n")
+            self.schedule_event_mapping[str(idx)] = event
+
+        self.schedule_textbox.configure(state="disabled")
+
+        self.schedule_event_number_label = customtkinter.CTkLabel(self.schedule_window, text="Numer wydarzenia do zaplanowania:", anchor="w")
+        self.schedule_event_number_label.grid(row=2, column=0, padx=20, pady=(20, 5))
+
+        self.schedule_event_number_entry = customtkinter.CTkEntry(self.schedule_window, width=300)
+        self.schedule_event_number_entry.grid(row=2, column=1, padx=20, pady=(20, 5))
+
+        self.set_schedule_button = customtkinter.CTkButton(
+            self.schedule_window,
+            text="Zaplanuj nagrywanie",
+            command=self.set_recording_schedule
+        )
+        self.set_schedule_button.grid(row=3, column=0, columnspan=2, padx=20, pady=20)
+
+    def set_recording_schedule(self):
+        selected_event_number = self.schedule_event_number_entry.get().strip()
+
+        if not selected_event_number.isdigit() or selected_event_number not in self.schedule_event_mapping:
+            print("Nieprawidłowy numer wydarzenia.")
+            return
+
+        event = self.schedule_event_mapping[selected_event_number]
+        user_email = self.email_entry.get().strip()
+
+        if not user_email:
+            print("Proszę podać adres e-mail.")
+            return
+        if not user_email.endswith("@gmail.com"):
+            print("Nieprawidłowy adres e-mail.")
+            return
+
+        event_start_time = event['start'].get('dateTime', event['start'].get('date'))
+        event_start_time = datetime.fromisoformat(event_start_time)
+
+        event_start_time = event_start_time.replace(tzinfo=None)
+        time_diff = event_start_time - datetime.now()
+
+        if time_diff.total_seconds() > 0:
+            print(f"Nagrywanie zaplanowane na rozpoczęcie o {event_start_time}")
+            self.after(int(time_diff.total_seconds() * 1000), self.toggle_start_stop)
+
+            self.schedule_window.destroy()
+        else:
+            print("Wydarzenie już się rozpoczęło!")
+
+
 
 if __name__ == "__main__":
     app = App()
