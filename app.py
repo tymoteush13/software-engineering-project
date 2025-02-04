@@ -115,14 +115,31 @@ class App(customtkinter.CTk):
         else:
             print("sidebar_button click")
 
+    def find_project_root(self,project_name="software-engineering-project"):
+        current_path = os.path.abspath(__file__)  # Pobiera pełną ścieżkę do skryptu
+        while True:
+            if os.path.basename(current_path) == project_name:
+                return current_path
+            parent = os.path.dirname(current_path)
+            if parent == current_path:  # Dotarliśmy do głównego katalogu systemowego
+                return None
+            current_path = parent  # Przechodzimy do folderu wyżej
+
+
     def open_folder(self):
-        folder_path = os.path.join(os.environ["USERPROFILE"], "software-engineering-project","Database")
+        project_path = self.find_project_root()
         
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-            print(f"Folder created at: {folder_path}")
+        if project_path is None:
+            print("Nie znaleziono katalogu projektu!")
+            return
         
-        os.startfile(folder_path)
+        database_path = os.path.join(project_path, "Database")
+
+        if not os.path.exists(database_path):
+            os.makedirs(database_path)
+            print(f"Folder utworzony w: {database_path}")
+
+        os.startfile(database_path)
 
     def list_and_delete_events(self):
 
