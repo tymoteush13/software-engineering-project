@@ -6,7 +6,7 @@
 2. Uruchomienie środowiska wirtualnego
 3. Aktywacja środowiska wirtualnego
 4. Instalacja niezbędnych pakietów (requirements + pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118)
-5. Uruchomienie aplikacji
+5. Uruchomienie aplikacji (plik app.py)
 
 ## Jak połączyć kalendarz
 - Połączenie się z kontem Google lub jego utworzenie
