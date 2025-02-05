@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 import time
 import threading
 import ctypes
+import shutil
+
 
 from speech_summary import process_audio_file
 
@@ -139,6 +141,11 @@ class App(customtkinter.CTk):
             self.stop_screenshot.set()
             self.screenshot_thread.join()
 
+            # Move audio_file.wav to Dataabse folder 
+            merged_audio_path = os.path.join(self.current_meeting_folder, "audio_file.wav")
+            shutil.move("audio_file.wav", merged_audio_path)
+            print(f"Audio file moved to: {merged_audio_path}")
+
             transcription_file = os.path.join(self.current_meeting_folder, "transcription.txt")
             summary_file = os.path.join(self.current_meeting_folder, "summary.txt")
 
@@ -154,7 +161,7 @@ class App(customtkinter.CTk):
 
             print(f"🎤 Processing audio for transcription & summary in: {self.current_meeting_folder}")
             # Process and save transcription + summary in the meeting folder
-            recorded_file = "out_merged.wav"
+            recorded_file = merged_audio_path
             process_audio_file(recorded_file, language, transcription_file, summary_file)
 
             print(f"✅ Transcription & summary saved in: {self.current_meeting_folder}")
@@ -182,7 +189,7 @@ class App(customtkinter.CTk):
                     continue
 
             current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            file_name = f"screenshot_{current_time}.png"
+            file_name = os.path.join(self.current_meeting_folder, f"screenshot_{current_time}.png")
             current_image.save(file_name)
             print(f"Screenshot saved as {file_name}")
 

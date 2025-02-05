@@ -2,6 +2,7 @@ import soundcard as sc
 import soundfile as sf
 import numpy as np
 import threading
+import os
 
 SAMPLE_RATE = 48000  # [Hz]. sampling rate.
 stop_recording = threading.Event()  # Use Event to signal stopping
@@ -67,6 +68,14 @@ def stop_recording_threads(threads):
     for t in threads:
         t.join()
     print("Recording completed.")
-    merge_wav_files("out_system.wav", "out_mikro.wav", "out_merged.wav")
+    merge_wav_files("out_system.wav", "out_mikro.wav", "audio_file.wav")
     print("Merging completed.")
+
+    # Usuwanie plików tymczasowych
+    try:
+        os.remove("out_system.wav")
+        os.remove("out_mikro.wav")
+        print("Temporary files removed.")
+    except Exception as e:
+        print("Error removing temporary files:", e)
 
