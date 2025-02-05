@@ -12,6 +12,7 @@ customtkinter.set_default_color_theme("blue")
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
+        self.current_meeting_folder = None
 
         self.title("App")
         self.geometry(f"{1100}x{580}")
@@ -98,14 +99,38 @@ class App(customtkinter.CTk):
 
     def toggle_start_stop(self):
         if self.start_button.cget("text") == "Start":
+            project_path = self.find_project_root()
+
+            if project_path is None:
+                print("Nie znaleziono katalogu projektu!")
+                return
+
+            database_path = os.path.join(project_path, "Database")
+
+            if not os.path.exists(database_path):
+                os.makedirs(database_path)
+                print(f"Folder utworzony w: {database_path}")
+
+            # Make a timestamped meeting folder
+            timestamp = datetime.now().strftime("%Y_%m_%d_%H-%M-%S")
+            self.current_meeting_folder = os.path.join(database_path,f"Spotkanie_{timestamp}")
+
+            # Create meeting folder
+            if not os.path.exists(self.current_meeting_folder):
+                os.makedirs(self.current_meeting_folder)
+                print(f"📁 Created folder: {self.current_meeting_folder}")
+
             self.start_button.configure(text="Stop", fg_color="red", hover_color="darkred")
             self.records_thread = start_recording()
+
+
         else:
             self.start_button.configure(text="Start", fg_color="green", hover_color="darkgreen")
             stop_recording_threads(self.records_thread)
 
-            # Process the recorded file after stopping
-            recorded_file = "out_merged.wav" # Update this with the actual file path
+            transcription_file = os.path.join(self.current_meeting_folder, "transcription.txt")
+            summary_file = os.path.join(self.current_meeting_folder, "summary.txt")
+
             language_map = {
                 "Polski": "pl",
                 "English": "en",
@@ -115,12 +140,13 @@ class App(customtkinter.CTk):
 
             }
             language = language_map.get(self.jezyk_optionmenu.get())  # Change based on user selection if necessary
-            transcription_file = "transcription.txt"
-            summary_file = "summary.txt"
 
-            print("Processing audio for transcription and summary...")
+            print(f"🎤 Processing audio for transcription & summary in: {self.current_meeting_folder}")
+            # Process and save transcription + summary in the meeting folder
+            recorded_file = "out_merged.wav"
             process_audio_file(recorded_file, language, transcription_file, summary_file)
 
+            print(f"✅ Transcription & summary saved in: {self.current_meeting_folder}")
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
