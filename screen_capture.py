@@ -1,40 +1,98 @@
-import cv2
-import numpy as np
-from mss import mss
+import mss
 import time
-import pytesseract
+from datetime import datetime
+import pygetwindow as gw
+from PIL import Image, ImageChops
+import numpy as np
+from skimage.metrics import structural_similarity as ssim
+import ctypes
 
-monitor_area = {'top': 0, 'left': 0, 'width': 1920, 'height': 1080}
+def calculate_similarity_ssim(image1, image2):
+    """Calculate the Structural Similarity Index (SSIM) between two images."""
+    image1_gray = image1.convert("L")
+    image2_gray = image2.convert("L")
+    
+    image1_np = np.array(image1_gray)
+    image2_np = np.array(image2_gray)
+    
+    similarity, _ = ssim(image1_np, image2_np, full=True)
+    return similarity
 
-pytesseract.pytesseract.tesseract_cmd = 'C:/Program Files/Tesseract-OCR/tesseract.exe'
+def get_monitor_area(app_name):
+    """Find the monitor area for an application window by name."""
+    windows = gw.getWindowsWithTitle(app_name)
+    for window in windows:
+        if app_name.lower() in window.title.lower():
+            # Restore the window if it's minimized
+            if window.isMinimized:
+                window.restore()
+                time.sleep(0.5)  # Give some time for the window to restore
 
-output_file = "capture.avi"
+            # Activate the window
+            window.activate()
+            time.sleep(0.5)  # Give some time for the window to activate
 
-# Video settings
-fps = 30
-codec = cv2.VideoWriter_fourcc(*'XVID')
-output = cv2.VideoWriter(output_file, codec, fps, (monitor_area['width'], monitor_area['height']))
-duration = 20
+            # Get the position and size of the window
+            left = window.left
+            top = window.top
+            width = window.width
+            height = window.height
+            return {"top": top, "left": left, "width": width, "height": height}
 
-frame_count = 0
-start_time = time.time()
+    print(f"Application with name containing '{app_name}' not found.")
+    return None
 
-frames_to_capture = fps * duration
+def take_screenshot(monitor_area):
+    """Capture a screenshot of the specified monitor area."""
+    with mss.mss() as sct:
+        monitor = {"top": monitor_area["top"], "left": monitor_area["left"], "width": monitor_area["width"], "height": monitor_area["height"], "mon": -1}
+        sct_img = sct.grab(monitor)
+        # Convert raw screenshot to PIL Image
+        img = Image.frombytes("RGB", sct_img.size, sct_img.rgb)
+        return img
 
-with mss() as sct:
-    while frame_count < frames_to_capture:
+def main():
+    # Set DPI awareness to avoid scaling issues
+    ctypes.windll.user32.SetProcessDPIAware()
 
-        screenshot = sct.grab(monitor_area)
-        frame = np.array(screenshot)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+    # Find the monitor area for the application "Teams"
+    app_name = "Teams"
+    monitor_area = get_monitor_area(app_name)
 
-        if frame_count % 60 == 0:
-            text = pytesseract.image_to_string(frame, lang='pol')
-            print("Wykryty tekst:", text)
+    if monitor_area is None:
+        print("Unable to find the application window. Exiting.")
+        return
 
-        output.write(frame)
+    # Initialize the previous screenshot as None
+    previous_image = None
 
-        frame_count += 1
+    while True:
+        # Take a new screenshot
+        current_image = take_screenshot(monitor_area)
 
-output.release()
-cv2.destroyAllWindows()
+        # Compare with the previous image if it exists
+        if previous_image is not None:
+            # Calculate similarity using SSIM
+            similarity = calculate_similarity_ssim(previous_image, current_image)
+            print(f"SSIM Similarity: {similarity:.2f}")
+
+            # Skip saving if similarity is above 90%
+            if similarity > 0.9:
+                print("Screenshots are similar. Skipping save.")
+                time.sleep(5)
+                continue
+
+        # Save the current screenshot
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        file_name = f"screenshot_{current_time}.png"
+        current_image.save(file_name)
+        print(f"Screenshot saved as {file_name}")
+
+        # Update the previous image
+        previous_image = current_image
+
+        # Wait before the next iteration
+        time.sleep(5)
+
+if __name__ == "__main__":
+    main()

@@ -2,7 +2,11 @@ import customtkinter
 import os
 from integrate_with_calendar import create_google_calendar_event, list_google_calendar_events, delete_google_calendar_event
 from record_audio import start_recording, stop_recording_threads
+from screen_capture import take_screenshot, get_monitor_area, calculate_similarity_ssim
 from datetime import datetime, timezone
+import time
+import threading
+import ctypes
 
 from speech_summary import process_audio_file
 
@@ -21,6 +25,8 @@ class App(customtkinter.CTk):
         self.event_window = None
         
         self.records_thread = None
+        self.screenshot_thread = None
+        self.stop_screenshot = threading.Event()
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure((2, 3), weight=0)
@@ -122,11 +128,16 @@ class App(customtkinter.CTk):
 
             self.start_button.configure(text="Stop", fg_color="red", hover_color="darkred")
             self.records_thread = start_recording()
+            self.stop_screenshot.clear()
+            self.screenshot_thread = threading.Thread(target=self.capture_screenshots, args=("Teams",))
+            self.screenshot_thread.start()
 
 
         else:
             self.start_button.configure(text="Start", fg_color="green", hover_color="darkgreen")
             stop_recording_threads(self.records_thread)
+            self.stop_screenshot.set()
+            self.screenshot_thread.join()
 
             transcription_file = os.path.join(self.current_meeting_folder, "transcription.txt")
             summary_file = os.path.join(self.current_meeting_folder, "summary.txt")
@@ -148,6 +159,36 @@ class App(customtkinter.CTk):
 
             print(f"✅ Transcription & summary saved in: {self.current_meeting_folder}")
 
+    def capture_screenshots(self, app_name):
+        ctypes.windll.user32.SetProcessDPIAware()
+        monitor_area = get_monitor_area(app_name)
+        
+        if monitor_area is None:
+            print("Unable to find the application window. Exiting.")
+            return
+
+        previous_image = None
+
+        while not self.stop_screenshot.is_set():
+            current_image = take_screenshot(monitor_area)
+            
+            if previous_image is not None:
+                similarity = calculate_similarity_ssim(previous_image, current_image)
+                print(f"SSIM Similarity: {similarity:.2f}")
+
+                if similarity > 0.9:
+                    print("Screenshots are similar. Skipping save.")
+                    time.sleep(5)
+                    continue
+
+            current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            file_name = f"screenshot_{current_time}.png"
+            current_image.save(file_name)
+            print(f"Screenshot saved as {file_name}")
+
+            previous_image = current_image
+            time.sleep(5)    
+    
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
 
