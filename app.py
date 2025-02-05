@@ -4,6 +4,8 @@ from integrate_with_calendar import create_google_calendar_event, list_google_ca
 from record_audio import start_recording, stop_recording_threads
 from datetime import datetime, timezone
 
+from speech_summary import process_audio_file
+
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
 
@@ -47,7 +49,7 @@ class App(customtkinter.CTk):
         # Język Label and OptionMenu
         self.jezyk_label = customtkinter.CTkLabel(self.sidebar_frame, text="Język:", anchor="w")
         self.jezyk_label.grid(row=5, column=0, padx=20, pady=(10, 0))
-        self.jezyk_optionmenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Polski", "Angielski"], command=self.sidebar_button_event)
+        self.jezyk_optionmenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Polski", "English", "Espanol", "Francais", "Deutsch"], command=self.sidebar_button_event)
         self.jezyk_optionmenu.grid(row=6, column=0, padx=20, pady=10)
 
         # Appearance Mode Label and OptionMenu
@@ -101,6 +103,24 @@ class App(customtkinter.CTk):
         else:
             self.start_button.configure(text="Start", fg_color="green", hover_color="darkgreen")
             stop_recording_threads(self.records_thread)
+
+            # Process the recorded file after stopping
+            recorded_file = "out_merged.wav" # Update this with the actual file path
+            language_map = {
+                "Polski": "pl",
+                "English": "en",
+                "Espanol": "es",
+                "Francais": "fr",
+                "Deutsch": "de"
+
+            }
+            language = language_map.get(self.jezyk_optionmenu.get())  # Change based on user selection if necessary
+            transcription_file = "transcription.txt"
+            summary_file = "summary.txt"
+
+            print("Processing audio for transcription and summary...")
+            process_audio_file(recorded_file, language, transcription_file, summary_file)
+
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
