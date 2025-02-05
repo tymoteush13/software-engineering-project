@@ -8,7 +8,7 @@ import nltk
 import whisper
 import torch
 import openai
-API_KEY = "enter openAI api key here"
+API_KEY = "sk-..."  # Your OpenAI API key here
 client = openai.OpenAI(api_key=API_KEY)
 
 # Download necessary NLTK resources

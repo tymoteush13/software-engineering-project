@@ -32,78 +32,81 @@ class App(customtkinter.CTk):
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure((2, 3), weight=0)
-        self.grid_rowconfigure((0, 1, 2), weight=1)
+        self.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
 
 
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(4, weight=1)
-        
+        for i in range(5):  # Przyjmując, że masz 5 wierszy w sidebar_frame
+            self.sidebar_frame.grid_rowconfigure(i, weight=1)
 
         self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Ustawienia", font=customtkinter.CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
         
-        # Max miejsce Label and OptionMenu
-        self.max_miejsce_label = customtkinter.CTkLabel(self.sidebar_frame, text="Max miejsce:", anchor="w")
-        self.max_miejsce_label.grid(row=1, column=0, padx=20, pady=(10, 0))
-        self.max_miejsce_optionmenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["2", "4", "6", "8", "10"], command=self.sidebar_button_event)
-        self.max_miejsce_optionmenu.grid(row=2, column=0, padx=20, pady=10)
-        
-        # Jakość Label and OptionMenu
-        self.jakosc_label = customtkinter.CTkLabel(self.sidebar_frame, text="Jakość nagrania:", anchor="w")
-        self.jakosc_label.grid(row=3, column=0, padx=20, pady=(10, 0))
-        self.jakosc_optionmenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["360p", "720p", "1080p", "1440p"], command=self.sidebar_button_event)
-        self.jakosc_optionmenu.grid(row=4, column=0, padx=20, pady=10)
+        # Platforma Label and OptionMenu
+        self.platforma_label = customtkinter.CTkLabel(self.sidebar_frame, text="Platforma:", anchor="w")
+        self.platforma_label.grid(row=1, column=0, padx=20, pady=(10, 0))
+        self.platforma_optionmenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Teams", "Zoom", "Google Meet",], command=self.sidebar_button_event)
+        self.platforma_optionmenu.grid(row=2, column=0, padx=20, pady=10)
+
+        self.dodatkowe_ustawienia_label = customtkinter.CTkLabel(self.sidebar_frame, text="Dodatkowe ustawienia", font=customtkinter.CTkFont(size=16, weight="bold"))
+        self.dodatkowe_ustawienia_label.grid(row=6, column=0, padx=20, pady=(20, 0))
         
         # Język Label and OptionMenu
         self.jezyk_label = customtkinter.CTkLabel(self.sidebar_frame, text="Język:", anchor="w")
-        self.jezyk_label.grid(row=5, column=0, padx=20, pady=(10, 0))
+        self.jezyk_label.grid(row=4, column=0, padx=20, pady=(10, 0))
         self.jezyk_optionmenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Polski", "English", "Espanol", "Francais", "Deutsch"], command=self.sidebar_button_event)
-        self.jezyk_optionmenu.grid(row=6, column=0, padx=20, pady=10)
+        self.jezyk_optionmenu.grid(row=5, column=0, padx=20, pady=10)
 
         # Appearance Mode Label and OptionMenu
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        self.appearance_mode_label.grid(row=7, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=7, column=0, padx=20, pady=(30, 20))
         self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"], command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 10))
+        self.appearance_mode_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 20))
         
         # UI Scaling Label and OptionMenu
         self.scaling_label = customtkinter.CTkLabel(self.sidebar_frame, text="UI Scaling:", anchor="w")
         self.scaling_label.grid(row=9, column=0, padx=20, pady=(10, 0))
         self.scaling_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["80%", "90%", "100%", "110%", "120%"], command=self.change_scaling_event)
-        self.scaling_optionemenu.grid(row=10, column=0, padx=20, pady=(10, 20))
+        self.scaling_optionemenu.grid(row=10, column=0, padx=20, pady=(10, 10))
 
         # create buttons in the middle
-        self.max_miejsce_optionmenu.set("6")
-        self.jakosc_optionmenu.set("1080p")
+        self.platforma_optionmenu.set("Teams")
         self.jezyk_optionmenu.set("Polski")
         self.appearance_mode_optionemenu.set("Dark")
         self.scaling_optionemenu.set("100%")
 
+        self.start_label = customtkinter.CTkLabel(self, text="Nagrywanie spotkania", font=customtkinter.CTkFont(size=16, weight="bold"))
+        self.start_label.grid(row=0, column=1, padx=(20, 0), pady=(20, 10))
+
         self.start_button = customtkinter.CTkButton(self, text="Start", command=self.toggle_start_stop, fg_color="green", hover_color="darkgreen")
-        self.start_button.grid(row=0, column=1, padx=10, pady=10)
-
-        self.email_label = customtkinter.CTkLabel(self, text="Adres e-mail kalendarza:", anchor="w")
-        self.email_label.grid(row=0, column=2, padx=(5, 0), pady=(5, 0))
-
-        self.email_entry = customtkinter.CTkEntry(self, width=300)
-        self.email_entry.grid(row=0, column=3, padx=(0, 5), pady=(5, 0))
-
-        # schedule recording button
-        self.schedule_recording_button = customtkinter.CTkButton(self, text="Zaplanowanie nagrywania", command=self.open_schedule_recording_window)
-        self.schedule_recording_button.grid(row=1, column=2, padx=10, pady=10)
+        self.start_button.grid(row=1, column=1, padx=10, pady=10)
 
         # folder opening button
-        self.open_folder_button = customtkinter.CTkButton(self, text="Otwórz Folder", command=self.open_folder)
-        self.open_folder_button.grid(row=1, column=3, padx=10, pady=10)
+        self.open_folder_button = customtkinter.CTkButton(self, text="Przeglądaj spotkania", command=self.open_folder)
+        self.open_folder_button.grid(row=3, column=1, padx=10, pady=10)
+
+        self.calendar_label = customtkinter.CTkLabel(self, text="Integracja z kalendarzem", font=customtkinter.CTkFont(size=16, weight="bold"))
+        self.calendar_label.grid(row=0, column=2,columnspan=2 ,padx=(20, 0), pady=(20, 10))
+
+        # email input fields
+        self.email_label = customtkinter.CTkLabel(self, text="Adres e-mail kalendarza:", anchor="w")
+        self.email_label.grid(row=1, column=2, padx=(5, 0), pady=(5, 0))
+
+        self.email_entry = customtkinter.CTkEntry(self, width=300)
+        self.email_entry.grid(row=1, column=3, padx=(0, 5), pady=(5, 0))
 
         # create event window button
         self.create_event_window_button = customtkinter.CTkButton(self, text="Utwórz wydarzenie", command=self.open_event_window)
-        self.create_event_window_button.grid(row=2, column=3, padx=10, pady=10)
+        self.create_event_window_button.grid(row=2, column=2,columnspan=2, padx=10, pady=10)
 
         # list events button
         self.list_events_button = customtkinter.CTkButton(self, text="Wyświetl/Usuń wydarzenia", command=self.list_and_delete_events)
-        self.list_events_button.grid(row=3, column=3, padx=10, pady=10)
+        self.list_events_button.grid(row=3, column=2,columnspan=2, padx=10, pady=10)
+
+        # schedule recording button
+        self.schedule_recording_button = customtkinter.CTkButton(self, text="Zaplanowanie nagrywania", command=self.open_schedule_recording_window)
+        self.schedule_recording_button.grid(row=4, column=2,columnspan=2, padx=10, pady=10)
 
     def toggle_start_stop(self):
         if self.start_button.cget("text") == "Start":
@@ -131,7 +134,7 @@ class App(customtkinter.CTk):
             self.start_button.configure(text="Stop", fg_color="red", hover_color="darkred")
             self.records_thread = start_recording()
             self.stop_screenshot.clear()
-            self.screenshot_thread = threading.Thread(target=self.capture_screenshots, args=("Teams",))
+            self.screenshot_thread = threading.Thread(target=self.capture_screenshots, args=(self.platforma_optionmenu.get(),))
             self.screenshot_thread.start()
 
 
