@@ -8,6 +8,9 @@ import time
 import threading
 import ctypes
 import shutil
+from PIL import Image
+from docx import Document
+from docx.shared import Inches
 
 
 from speech_summary import process_audio_file
@@ -169,6 +172,11 @@ class App(customtkinter.CTk):
 
             print(f"✅ Transcription & summary saved in: {self.current_meeting_folder}")
 
+            # Create Word document from screenshots
+            word_file = os.path.join(self.current_meeting_folder, "screenshots.docx")
+            self.create_word_from_images(self.current_meeting_folder, word_file)
+            print(f"📄 Word document created from screenshots: {word_file}")
+
     def capture_screenshots(self, app_name):
         ctypes.windll.user32.SetProcessDPIAware()
         monitor_area = get_monitor_area(app_name)
@@ -197,7 +205,20 @@ class App(customtkinter.CTk):
             print(f"Screenshot saved as {file_name}")
 
             previous_image = current_image
-            time.sleep(5)    
+            time.sleep(5)   
+
+        def create_word_from_images(self, image_folder, output_word):
+            document = Document()
+    
+            for filename in sorted(os.listdir(image_folder)):
+                if filename.endswith(".png"):
+                    image_path = os.path.join(image_folder, filename)
+                    document.add_picture(image_path, width=Inches(6))
+
+            document.save(output_word)
+            print(f"Word document created: {output_word}")        
+        
+
     
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
