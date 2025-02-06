@@ -35,6 +35,24 @@
     ```bash
     python app.py
     ```
+
+## Konfiguracja urządzeń audio w systemie Windows
+
+Aby aplikacja poprawnie działała z dźwiękiem, upewnij się, że odpowiednie urządzenia audio są ustawione jako domyślne.
+
+### Instrukcja
+
+1.Otwórz Panel sterowania → Dźwięk.
+
+2. Przejdź do zakładki Odtwarzanie i wybierz urządzenie, które chcesz używać (np. słuchawki, głośniki). Kliknij Ustaw jako domyślne.
+
+3. Przejdź do zakładki Nagrywanie i wykonaj ten sam krok dla mikrofonu, jeśli aplikacja go wymaga.
+
+4. Zapisz zmiany, klikając OK.
+
+Teraz aplikacja będzie korzystać z wybranych urządzeń audio.
+
+    
 ## Jak połączyć aplikację z kalendarzem Google
 
 1. **Zaloguj się lub utwórz konto Google**:
