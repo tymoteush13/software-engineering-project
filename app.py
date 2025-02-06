@@ -39,8 +39,8 @@ class App(customtkinter.CTk):
 
 
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
-        self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        for i in range(5):  # Przyjmując, że masz 5 wierszy w sidebar_frame
+        self.sidebar_frame.grid(row=0, column=0, rowspan=11, sticky="nsew")
+        for i in range(5):
             self.sidebar_frame.grid_rowconfigure(i, weight=1)
 
         self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Ustawienia", font=customtkinter.CTkFont(size=20, weight="bold"))
@@ -57,9 +57,12 @@ class App(customtkinter.CTk):
         
         # Język Label and OptionMenu
         self.jezyk_label = customtkinter.CTkLabel(self.sidebar_frame, text="Język:", anchor="w")
-        self.jezyk_label.grid(row=4, column=0, padx=20, pady=(10, 0))
+        self.jezyk_label.grid(row=3, column=0, padx=20, pady=(10, 0))
         self.jezyk_optionmenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Polski", "English", "Espanol", "Francais", "Deutsch"], command=self.sidebar_button_event)
-        self.jezyk_optionmenu.grid(row=5, column=0, padx=20, pady=10)
+        self.jezyk_optionmenu.grid(row=4, column=0, padx=20, pady=10)
+
+        self.appearance_label = customtkinter.CTkLabel(self.sidebar_frame, text="-------------------------------------", font=customtkinter.CTkFont(size=16, weight="bold"))
+        self.appearance_label.grid(row=5, column=0, padx=20, pady=(20, 0))
 
         # Appearance Mode Label and OptionMenu
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
@@ -207,16 +210,16 @@ class App(customtkinter.CTk):
             previous_image = current_image
             time.sleep(5)   
 
-        def create_word_from_images(self, image_folder, output_word):
-            document = Document()
-    
-            for filename in sorted(os.listdir(image_folder)):
-                if filename.endswith(".png"):
-                    image_path = os.path.join(image_folder, filename)
-                    document.add_picture(image_path, width=Inches(6))
+    def create_word_from_images(self, image_folder, output_word):
+        document = Document()
 
-            document.save(output_word)
-            print(f"Word document created: {output_word}")        
+        for filename in sorted(os.listdir(image_folder)):
+            if filename.endswith(".png"):
+                image_path = os.path.join(image_folder, filename)
+                document.add_picture(image_path, width=Inches(6))
+
+        document.save(output_word)
+        print(f"Word document created: {output_word}")
         
 
     
@@ -234,14 +237,14 @@ class App(customtkinter.CTk):
             print("sidebar_button click")
 
     def find_project_root(self,project_name="software-engineering-project"):
-        current_path = os.path.abspath(__file__)  # Pobiera pełną ścieżkę do skryptu
+        current_path = os.path.abspath(__file__)
         while True:
             if os.path.basename(current_path) == project_name:
                 return current_path
             parent = os.path.dirname(current_path)
-            if parent == current_path:  # Dotarliśmy do głównego katalogu systemowego
+            if parent == current_path:
                 return None
-            current_path = parent  # Przechodzimy do folderu wyżej
+            current_path = parent
 
 
     def open_folder(self):
